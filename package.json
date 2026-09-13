@@ -1,0 +1,20 @@
+{
+  "name": "text-to-audio-converter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Convert text documents to audio",
+  "license": "ISC",
+  "author": "Michael Quarcoo",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "frontend:dev": "npm run dev --workspace=frontend",
+    "frontend:build": "npm run build --workspace=frontend",
+    "backend:build": "npm run build --workspace=backend",
+    "backend:deploy": "npm run cdk deploy --workspace=backend",
+    "build:all": "npm run backend:build && npm run frontend:build"
+  }
+}
