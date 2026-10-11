@@ -1,7 +1,9 @@
 {
   "app": "npx tsx bin/backend.ts",
   "watch": {
-    "include": ["**"],
+    "include": [
+      "**"
+    ],
     "exclude": [
       "README.md",
       "cdk*.json",
@@ -19,12 +21,16 @@
     "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
-    "@aws-cdk/core:target-partitions": ["aws", "aws-cn"],
+    "@aws-cdk/core:target-partitions": [
+      "aws",
+      "aws-cn"
+    ],
     "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": true,
     "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": true,
     "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
     "@aws-cdk/aws-iam:minimizePolicies": true,
     "@aws-cdk/core:validateSnapshotRemovalPolicy": true,
+    "@aws-cdk/core:defaultCrossStackReferences": "weak",
     "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": true,
     "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
     "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": true,
@@ -95,6 +101,26 @@
     "@aws-cdk/aws-ecs-patterns:uniqueTargetGroupId": true,
     "@aws-cdk/aws-route53-patterns:useDistribution": true,
     "@aws-cdk/aws-cloudfront:defaultFunctionRuntimeV2_0": true,
-    "@aws-cdk/aws-elasticloadbalancingv2:usePostQuantumTlsPolicy": true
+    "@aws-cdk/aws-elasticloadbalancingv2:usePostQuantumTlsPolicy": true,
+    "@aws-cdk/core:newStyleStackSynthesis": true,
+    "@aws-cdk/core:stackRelativeExports": true,
+    "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
+    "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "@aws-cdk/pipelines:reduceAssetRoleTrustScope": true,
+    "@aws-cdk/aws-stepfunctions-tasks:useNewS3UriParametersForBedrockInvokeModelTask": true,
+    "@aws-cdk/core:aspectStabilization": true,
+    "@aws-cdk/pipelines:reduceStageRoleTrustScope": true,
+    "@aws-cdk/cognito:logUserPoolClientSecretValue": false,
+    "@aws-cdk/pipelines:reduceCrossAccountActionRoleTrustScope": true,
+    "@aws-cdk/aws-ec2-alpha:useResourceIdForVpcV2Migration": false,
+    "@aws-cdk/aws-stepfunctions-tasks:httpInvokeDynamicJsonPathEndpoint": true,
+    "@aws-cdk/core:automaticL1Traits": true,
+    "@aws-cdk/aws-batch:defaultToAL2023": true,
+    "@aws-cdk/aws-eks:defaultToAL2023": true,
+    "@aws-cdk/core:annotationsInValidationReport": true,
+    "@aws-cdk/core:validateAgainstDefaultRules": true,
+    "@aws-cdk/aws-ecs:removeEmptyLoadBalancers": true
   }
 }

@@ -16,5 +16,8 @@
     "backend:build": "npm run build --workspace=backend",
     "backend:deploy": "npm run cdk deploy --workspace=backend",
     "build:all": "npm run backend:build && npm run frontend:build"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.7"
   }
 }

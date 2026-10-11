@@ -4,6 +4,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 const s3Client = new S3Client({});
 const BUCKET_NAME = process.env.BUCKET_NAME;
+const TABLE_NAME = process.env.TABLE_NAME;
 
 export const handler = async (
   event: APIGatewayProxyEvent,
