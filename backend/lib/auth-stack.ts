@@ -6,12 +6,15 @@ import {
   UserPoolClientIdentityProvider,
   UserPoolIdentityProviderGoogle,
 } from "aws-cdk-lib/aws-cognito";
-import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as cr from "aws-cdk-lib/custom-resources";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
 interface AuthStackProps extends StackProps {
   googleClientId: string;
   googleClientSecretParamPath: string;
+  oauthCallbackUrls: string[];
+  oauthLogoutUrls: string[];
 }
 
 export class AuthStack extends Stack {
@@ -28,7 +31,7 @@ export class AuthStack extends Stack {
       props.googleClientId,
       props.googleClientSecretParamPath,
     );
-    this.createUserPoolClient();
+    this.createUserPoolClient(props.oauthCallbackUrls, props.oauthLogoutUrls);
   }
 
   private createUserPool() {
@@ -60,14 +63,37 @@ export class AuthStack extends Stack {
     googleClientId: string,
     googleClientSecretParamPath: string,
   ) {
+    // Create custom resource
+    const ssmParameter = new cr.AwsCustomResource(this, "SsmSecureSecret", {
+      onCreate: {
+        service: "SSM",
+        action: "getParameter",
+        parameters: {
+          Name: googleClientSecretParamPath,
+          WithDecryption: true,
+        },
+        physicalResourceId: cr.PhysicalResourceId.of(
+          googleClientSecretParamPath,
+        ),
+        logging: cr.Logging.withDataHidden(),
+      },
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ["ssm:GetParameter"],
+          resources: [
+            `arn:aws:ssm:${this.region}:${this.account}:parameter${googleClientSecretParamPath}`,
+          ],
+        }),
+      ]),
+    });
+
     const googleProvider = new UserPoolIdentityProviderGoogle(
       this,
       "AloudGoogleProvider",
       {
         clientId: googleClientId,
-        clientSecret: ssm.StringParameter.valueFromLookup(
-          this,
-          googleClientSecretParamPath,
+        clientSecretValue: SecretValue.unsafePlainText(
+          ssmParameter.getResponseField("Parameter.Value"),
         ),
         userPool: this.userPool,
         scopes: ["profile", "email", "openid"],
@@ -82,7 +108,7 @@ export class AuthStack extends Stack {
     this.googleProvider = googleProvider;
   }
 
-  private createUserPoolClient() {
+  private createUserPoolClient(callbackUrls: string[], logoutUrls: string[]) {
     this.userPoolClient = new UserPoolClient(this, "AloudUserPoolClient", {
       userPool: this.userPool,
       supportedIdentityProviders: [
@@ -90,8 +116,8 @@ export class AuthStack extends Stack {
         UserPoolClientIdentityProvider.COGNITO,
       ],
       oAuth: {
-        callbackUrls: ["http://localhost:3000/api/auth/callback"],
-        logoutUrls: ["http://localhost:3000"],
+        callbackUrls,
+        logoutUrls,
       },
     });
 

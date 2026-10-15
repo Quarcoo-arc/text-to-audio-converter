@@ -72,7 +72,7 @@ export class ApiStack extends Stack {
       },
     });
 
-    const uploadResource = api.root.addResource("request-upload");
+    const uploadResource = api.root.addResource("uploads");
     uploadResource.addMethod(
       "POST",
       new LambdaIntegration(getPresignedUrlHandler),

@@ -26,10 +26,21 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET_PARAM) {
   );
 }
 
+const oauthCallbackUrls = process.env.OAUTH_CALLBACK_URLS?.split(",") || [];
+const oauthLogoutUrls = process.env.OAUTH_LOGOUT_URLS?.split(",") || [];
+
+if (oauthCallbackUrls.length === 0 || oauthLogoutUrls.length === 0) {
+  throw new Error(
+    "OAUTH_CALLBACK_URLS and OAUTH_LOGOUT_URLS must be provided in the environment variables.",
+  );
+}
+
 const authStack = new AuthStack(app, "AuthStack", {
   env,
   googleClientId: GOOGLE_CLIENT_ID,
   googleClientSecretParamPath: GOOGLE_CLIENT_SECRET_PARAM,
+  oauthCallbackUrls,
+  oauthLogoutUrls,
 });
 
 const dataStack = new DataStack(app, "DataStack", {

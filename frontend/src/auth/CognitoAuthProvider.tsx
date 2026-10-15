@@ -41,7 +41,20 @@ function CognitoAuthBridge({ children }: { children: ReactNode }) {
         : null,
       idToken: oidc.user?.id_token ?? null,
       signIn: () => void oidc.signinRedirect(),
-      signOut: () => void oidc.removeUser(),
+      // Cognito's Hosted UI /logout endpoint ignores the OIDC-standard
+      // post_logout_redirect_uri param (it wants its own logout_uri instead),
+      // and also needs client_id - which SignoutRedirectArgs won't let us
+      // pass directly, and which oidc-client-ts only auto-fills when
+      // id_token_hint is absent. Since react-oidc-context auto-attaches
+      // id_token_hint from the active session, that auto-fill never runs, so
+      // client_id must be set explicitly via extraQueryParams instead.
+      signOut: () =>
+        void oidc.signoutRedirect({
+          extraQueryParams: {
+            client_id: cognitoConfig.clientId ?? "",
+            logout_uri: cognitoConfig.logoutUri,
+          },
+        }),
     };
   }, [oidc]);
 

@@ -11,6 +11,9 @@ export const cognitoConfig = {
   redirectUri:
     (env.VITE_COGNITO_REDIRECT_URI as string | undefined) ??
     window.location.origin,
+  logoutUri:
+    (env.VITE_COGNITO_LOGOUT_URI as string | undefined) ??
+    window.location.origin,
 };
 
 export const apiBaseUrl = env.VITE_API_BASE_URL as string | undefined;
