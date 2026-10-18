@@ -22,8 +22,8 @@ interface ApiStackProps extends StackProps {
 export class ApiStack extends Stack {
   private bucket: IBucket;
   private table: dynamodb.ITable;
-  private uploadApiUrl: string;
   private authorizer: CognitoUserPoolsAuthorizer;
+  private restApi: RestApi;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -32,8 +32,9 @@ export class ApiStack extends Stack {
     this.table = props.table;
 
     this.createCognitoAuthorizer(props.userPool);
+    this.createRestApi();
     this.createUploadApi();
-    this.exportApiUrl();
+    this.createConversionsRetrievalApi();
   }
 
   private createCognitoAuthorizer(userPool: cognito.IUserPool) {
@@ -45,6 +46,22 @@ export class ApiStack extends Stack {
       },
     );
     this.authorizer = authorizer;
+  }
+
+  private createRestApi() {
+    const api = new RestApi(this, "AloudRestApi", {
+      restApiName: "Aloud Rest API",
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: Cors.ALL_METHODS,
+      },
+    });
+    this.restApi = api;
+
+    new CfnOutput(this, "AloudRestApiUrl", {
+      value: this.restApi.url,
+      description: "Base URL for Aloud Rest APIs",
+    });
   }
 
   private createUploadApi() {
@@ -63,16 +80,9 @@ export class ApiStack extends Stack {
     );
 
     this.bucket.grantPut(getPresignedUrlHandler);
+    this.table.grantReadWriteData(getPresignedUrlHandler);
 
-    const api = new RestApi(this, "DocumentUploadApi", {
-      restApiName: "Document Upload Service",
-      defaultCorsPreflightOptions: {
-        allowOrigins: Cors.ALL_ORIGINS,
-        allowMethods: Cors.ALL_METHODS,
-      },
-    });
-
-    const uploadResource = api.root.addResource("uploads");
+    const uploadResource = this.restApi.root.addResource("uploads");
     uploadResource.addMethod(
       "POST",
       new LambdaIntegration(getPresignedUrlHandler),
@@ -80,16 +90,31 @@ export class ApiStack extends Stack {
         authorizer: this.authorizer,
       },
     );
-
-    this.uploadApiUrl = api.url;
   }
 
-  private exportApiUrl() {
-    new CfnOutput(this, "ApiGatewayUrl", {
-      value: this.uploadApiUrl,
-      description:
-        "The URL of the API Gateway for requesting presigned S3 upload URLs",
-      exportName: "ApiGatewayUrl",
-    });
+  private createConversionsRetrievalApi() {
+    const getConversionsHandler = new NodejsFunction(
+      this,
+      "GetConversionsHandler",
+      {
+        runtime: Runtime.NODEJS_24_X,
+        entry: path.join(__dirname, "../src/handlers/get-conversions.ts"),
+        handler: "handler",
+        environment: {
+          TABLE_NAME: this.table.tableName,
+        },
+      },
+    );
+
+    this.table.grantReadData(getConversionsHandler);
+
+    const conversionsResource = this.restApi.root.addResource("conversions");
+    conversionsResource.addMethod(
+      "GET",
+      new LambdaIntegration(getConversionsHandler),
+      {
+        authorizer: this.authorizer,
+      },
+    );
   }
 }

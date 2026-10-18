@@ -33,6 +33,7 @@ export class DataStack extends Stack {
     this.table = new dynamodb.Table(this, "AloudDocumentTable", {
       partitionKey: { name: "PK", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "SK", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY, // Change this in production
     });
 
