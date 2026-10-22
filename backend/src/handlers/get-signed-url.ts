@@ -42,8 +42,37 @@ export const handler = async (
       };
     }
 
-    const fileName = body.fileName;
-    const contentType = body.contentType;
+    const allowedContentTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+    ];
+
+    if (!allowedContentTypes.includes(body.contentType)) {
+      return {
+        statusCode: 400,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({
+          error: `Invalid content type. Allowed types are: ${allowedContentTypes.join(
+            ", ",
+          )}`,
+        }),
+      };
+    }
+    
+    if (!event.requestContext.authorizer?.claims?.sub) {
+      return {
+        statusCode: 401,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({
+          error: "Unauthorized",
+        }),
+      };
+    }
+
+    const fileName: string = body.fileName.replace("/", "-");
+    const contentType: string = body.contentType;
     const userSub: string = event.requestContext.authorizer?.claims?.sub!;
     const id = ulid();
 
