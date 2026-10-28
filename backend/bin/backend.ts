@@ -11,8 +11,8 @@ const env = {
   account: process.env.CDK_ACCOUNT!,
   region: process.env.CDK_REGION!,
 };
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-const GOOGLE_CLIENT_SECRET_PARAM = process.env.GOOGLE_CLIENT_SECRET_PARAM!;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET_PARAM = process.env.GOOGLE_CLIENT_SECRET_PARAM;
 
 if (!env.account || !env.region) {
   throw new Error(
@@ -35,6 +35,22 @@ if (oauthCallbackUrls.length === 0 || oauthLogoutUrls.length === 0) {
   );
 }
 
+const SES_FROM_EMAIL = process.env.SES_FROM_EMAIL;
+
+if (!SES_FROM_EMAIL) {
+  throw new Error(
+    "SES_FROM_EMAIL must be provided in the environment variables.",
+  );
+}
+
+const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL;
+
+if (!FRONTEND_BASE_URL) {
+  throw new Error(
+    "FRONTEND_BASE_URL must be provided in the environment variables.",
+  );
+}
+
 const authStack = new AuthStack(app, "AuthStack", {
   env,
   googleClientId: GOOGLE_CLIENT_ID,
@@ -45,6 +61,8 @@ const authStack = new AuthStack(app, "AuthStack", {
 
 const dataStack = new DataStack(app, "DataStack", {
   env,
+  sesFromEmail: SES_FROM_EMAIL,
+  frontendBaseUrl: FRONTEND_BASE_URL,
 });
 
 const apiStack = new ApiStack(app, "ApiStack", {

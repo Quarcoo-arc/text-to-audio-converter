@@ -26,10 +26,25 @@ async function streamToBuffer(stream: any): Promise<Buffer> {
 }
 
 async function cleanText(text: string) {
-  return text
-    .replace(/\s+/g, " ") // Collapse multiple spaces and line breaks into single spaces
-    .replace(/[^\x20-\x7E]/g, "") // Strips out unreadable control characters/broken symbols
-    .trim();
+  if (!text) return "";
+
+  return (
+    text
+      // Replace Windows-style line breaks and carriage returns with standard newlines
+      .replace(/\r\n|\r/g, "\n")
+      // Turn multi-line gaps into double-newlines
+      .replace(/\n{2,}/g, "\n\n")
+      // Collapse multiple horizontal spaces/tabs into a single space, preserving single newlines
+      .replace(/[ \t]+/g, " ")
+      // Remove hidden control characters, preserving tabs (\t), newlines (\n),
+      // and unicode characters like accented letters
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+      // Clean up loose spaces at the start/end of lines
+      .split("\n")
+      .map((line) => line.trim())
+      .join("\n")
+      .trim()
+  );
 }
 
 export const handler = async (event: S3Event): Promise<void> => {
@@ -40,7 +55,6 @@ export const handler = async (event: S3Event): Promise<void> => {
   const keyParts = s3ObjectKey.split("/");
   const userSub = keyParts[1];
   const conversionId = keyParts[2];
-  const fileName = keyParts[3];
 
   try {
     // Mark entry as PROCESSING in dynamodb
@@ -109,29 +123,26 @@ export const handler = async (event: S3Event): Promise<void> => {
 
     const cleanedText = await cleanText(extractedText);
 
+    const audioS3KeyPrefix = `audio/${userSub}/${conversionId}`;
+
     // Convert text to audio file
-    const pollyCommand = new polly.SynthesizeSpeechCommand({
+    const pollyCommand = new polly.StartSpeechSynthesisTaskCommand({
       OutputFormat: "mp3",
       Text: cleanedText,
       VoiceId: "Joanna",
+      OutputS3BucketName: BUCKET_NAME,
+      OutputS3KeyPrefix: audioS3KeyPrefix,
     });
 
     const pollyResponse = await pollyClient.send(pollyCommand);
 
-    const audioFileName = fileName.replace(
-      `.${fileName.split(".").at(-1)}`,
-      ".mp3",
-    );
+    const taskId = pollyResponse.SynthesisTask?.TaskId;
 
-    // Upload audio file to S3
-    const s3command = new s3.PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: `audio/${userSub}/${conversionId}/${audioFileName}`,
-      ContentType: pollyResponse.ContentType,
-      Body: pollyResponse.AudioStream,
-    });
+    if (!taskId) {
+      throw new Error("Task ID should not be null");
+    }
 
-    await s3Client.send(s3command);
+    const audioKey = `${audioS3KeyPrefix}/${taskId}`;
 
     // Update DynamoDB record with the audio file URL and status
     const dynamodbCommand = new UpdateCommand({
@@ -149,7 +160,7 @@ export const handler = async (event: S3Event): Promise<void> => {
       },
       ExpressionAttributeValues: {
         ":status": ConversionStatus.COMPLETED,
-        ":audioKey": `audio/${userSub}/${conversionId}/${audioFileName}`,
+        ":audioKey": audioKey,
         ":updatedAt": new Date().toISOString(),
       },
     });
