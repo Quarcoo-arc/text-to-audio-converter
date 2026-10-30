@@ -124,10 +124,11 @@ export const handler = async (event: S3Event): Promise<void> => {
     const cleanedText = await cleanText(extractedText);
 
     const audioS3KeyPrefix = `audio/${userSub}/${conversionId}`;
+    const outputFormat = "mp3";
 
     // Convert text to audio file
     const pollyCommand = new polly.StartSpeechSynthesisTaskCommand({
-      OutputFormat: "mp3",
+      OutputFormat: outputFormat,
       Text: cleanedText,
       VoiceId: "Joanna",
       OutputS3BucketName: BUCKET_NAME,
@@ -142,7 +143,7 @@ export const handler = async (event: S3Event): Promise<void> => {
       throw new Error("Task ID should not be null");
     }
 
-    const audioKey = `${audioS3KeyPrefix}/${taskId}`;
+    const audioKey = `${audioS3KeyPrefix}.${taskId}.${outputFormat}`;
 
     // Update DynamoDB record with the audio file URL and status
     const dynamodbCommand = new UpdateCommand({

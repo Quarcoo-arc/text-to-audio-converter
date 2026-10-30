@@ -17,7 +17,8 @@ export const handler = async (event: S3Event) => {
   const objectKey = event.Records[0].s3.object.key;
   const objectKeyParts = objectKey.split("/");
   const userSub = objectKeyParts[1];
-  const ulid = objectKeyParts[2];
+  const fileName = objectKeyParts[2];
+  const [ulid, ..._] = fileName.split(".");
 
   try {
     const dynamodbGetCommand = new GetCommand({

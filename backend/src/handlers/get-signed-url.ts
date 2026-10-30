@@ -60,7 +60,7 @@ export const handler = async (
         }),
       };
     }
-    
+
     if (!event.requestContext.authorizer?.claims?.sub) {
       return {
         statusCode: 401,
@@ -71,7 +71,7 @@ export const handler = async (
       };
     }
 
-    const fileName: string = body.fileName.replace("/", "-");
+    const fileName: string = body.fileName.replaceAll("/", "-");
     const contentType: string = body.contentType;
     const userSub: string = event.requestContext.authorizer?.claims?.sub!;
     const id = ulid();
