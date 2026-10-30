@@ -16,6 +16,7 @@
     "@types/node": "^24.10.1",
     "@types/word-extractor": "^1.0.6",
     "aws-cdk": "^2.1145.0",
+    "aws-sdk-client-mock": "^4.1.0",
     "jest": "^30",
     "ts-jest": "^29",
     "tsx": "^4.23.13",
