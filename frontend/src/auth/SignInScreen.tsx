@@ -12,15 +12,15 @@ export function SignInScreen() {
         <span className="font-display text-lg font-medium">Aloud</span>
       </div>
 
-      <div className="flex flex-1 items-center">
-        <div className="max-w-md">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="max-w-2xl *:mx-auto flex-col text-center">
           <Waveform active className="mb-8 h-8 text-signal" />
           <h1 className="font-display text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">
             Turn documents into something you can listen to.
           </h1>
           <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-ink-soft">
             Upload a PDF, Word document, or text file. We read it aloud and
-            email you the audio when it's ready.
+            email you once the audio is ready.
           </p>
 
           <button

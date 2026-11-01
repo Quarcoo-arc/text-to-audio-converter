@@ -12,7 +12,7 @@ export function ConversionList({
   isLoading,
 }: ConversionListProps) {
   return (
-    <section className="mt-12">
+    <section>
       <h2 className="font-display text-lg font-medium text-ink">
         Your conversions
       </h2>
