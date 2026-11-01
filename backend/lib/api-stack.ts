@@ -3,6 +3,7 @@ import {
   CognitoUserPoolsAuthorizer,
   Cors,
   LambdaIntegration,
+  Resource,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -24,6 +25,7 @@ export class ApiStack extends Stack {
   private table: dynamodb.ITable;
   private authorizer: CognitoUserPoolsAuthorizer;
   private restApi: RestApi;
+  private conversionsResource: Resource;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -35,6 +37,7 @@ export class ApiStack extends Stack {
     this.createRestApi();
     this.createUploadApi();
     this.createConversionsRetrievalApi();
+    this.createDownloadApi();
   }
 
   private createCognitoAuthorizer(userPool: cognito.IUserPool) {
@@ -108,10 +111,41 @@ export class ApiStack extends Stack {
 
     this.table.grantReadData(getConversionsHandler);
 
-    const conversionsResource = this.restApi.root.addResource("conversions");
-    conversionsResource.addMethod(
+    this.conversionsResource = this.restApi.root.addResource("conversions");
+    this.conversionsResource.addMethod(
       "GET",
       new LambdaIntegration(getConversionsHandler),
+      {
+        authorizer: this.authorizer,
+      },
+    );
+  }
+
+  private createDownloadApi() {
+    const getDownloadUrlHandler = new NodejsFunction(
+      this,
+      "GetDownloadUrlHandler",
+      {
+        runtime: Runtime.NODEJS_24_X,
+        entry: path.join(__dirname, "../src/handlers/get-download-url.ts"),
+        handler: "handler",
+        environment: {
+          BUCKET_NAME: this.bucket.bucketName,
+          TABLE_NAME: this.table.tableName,
+        },
+      },
+    );
+
+    this.bucket.grantRead(getDownloadUrlHandler);
+    this.table.grantReadData(getDownloadUrlHandler);
+
+    const downloadSingleConversionResource = this.conversionsResource
+      .addResource("{conversionId}")
+      .addResource("download");
+
+    downloadSingleConversionResource.addMethod(
+      "GET",
+      new LambdaIntegration(getDownloadUrlHandler),
       {
         authorizer: this.authorizer,
       },
