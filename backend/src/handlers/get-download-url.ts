@@ -24,7 +24,10 @@ export const handler = async (
         PK: `USER#${userSub}`,
         SK: `CONVERSION#${conversionId}`,
       },
-      ProjectionExpression: "audioKey, status, createdAt, updatedAt",
+      ProjectionExpression: "audioKey, #status, createdAt, updatedAt",
+      ExpressionAttributeNames: {
+        "#status": "status",
+      },
     });
 
     const getItemResult = await dynamoDocClient.send(getItemCommand);

@@ -28,7 +28,10 @@ export const handler = async (event: S3Event) => {
         SK: `CONVERSION#${ulid}`,
       },
       ProjectionExpression:
-        "userEmail, sourceKey, status, createdAt, updatedAt",
+        "userEmail, sourceKey, #status, createdAt, updatedAt",
+      ExpressionAttributeNames: {
+        "#status": "status",
+      },
     });
 
     const dynamodbGetResponse =
