@@ -64,10 +64,9 @@ export const handler = async (event: S3Event) => {
               Data: `
                 <h1>Hi there 👋</h1>
                 <br/>
+                <p style="font-size: 1.3rem;">Your document named <strong>${documentName}</strong> was successfully converted into audio ♪♪♪</p>
                 <br/>
-                <p>Your document named <strong>${documentName}</strong> was successfully converted into audio ♪♪♪</p>
-                <br/>
-                <a href="${FRONTEND_BASE_URL}/${ulid}">Check it out on Aloud</a>
+                <a style="background-color: #007bff; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px;" href="${FRONTEND_BASE_URL}">Check it out on Aloud</a>
                 `,
               Charset: "UTF-8",
             },
