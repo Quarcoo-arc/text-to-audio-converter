@@ -69,47 +69,44 @@ export function ConversionListItem({ record }: { record: ConversionRecord }) {
   }
 
   return (
-    <li className="flex items-center justify-between gap-4 border-t border-line py-4 first:border-t-0">
-      <div className="min-w-0">
-        <p className="truncate text-sm text-ink">{record.fileName}</p>
-        <p className="mt-0.5 text-xs text-ink-soft">
-          {formatDate(record.createdAt)}
-        </p>
-      </div>
-
-      {isCompleted ? (
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <button
-            type="button"
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="text-sm font-medium text-signal underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isDownloading ? "Preparing…" : "Download"}
-          </button>
-          {downloadError && (
-            <p className="text-xs text-error">Couldn't get the file</p>
-          )}
+    <li className="border-t border-line py-4 first:border-t-0">
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm text-ink">{record.fileName}</p>
+          <p className="mt-0.5 text-xs text-ink-soft">
+            {formatDate(record.createdAt)}
+          </p>
         </div>
-      ) : isFailed ? (
-        <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-          <div className="flex items-center gap-2 text-sm text-error">
+
+        {isCompleted ? (
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="text-sm font-medium text-signal underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isDownloading ? "Preparing…" : "Download"}
+            </button>
+            {downloadError && (
+              <p className="text-xs text-error">Couldn't get the file</p>
+            )}
+          </div>
+        ) : (
+          <div
+            className={
+              "flex shrink-0 items-center gap-2 text-sm " +
+              (isFailed ? "text-error" : "text-ink-soft")
+            }
+          >
+            {isProcessing && <Waveform active className="h-3" />}
             {STATUS_COPY[record.status]}
           </div>
-          {record.errorMessage && (
-            <p
-              className="max-w-[18rem] truncate text-xs text-ink-soft"
-              title={record.errorMessage}
-            >
-              {record.errorMessage}
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="flex shrink-0 items-center gap-2 text-sm text-ink-soft">
-          {isProcessing && <Waveform active className="h-3" />}
-          {STATUS_COPY[record.status]}
-        </div>
+        )}
+      </div>
+
+      {isFailed && record.errorMessage && (
+        <p className="mt-1.5 text-xs text-ink-soft">{record.errorMessage}</p>
       )}
     </li>
   );
