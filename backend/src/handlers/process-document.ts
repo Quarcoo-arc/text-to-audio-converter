@@ -16,6 +16,17 @@ const dynamoDbClient = new dynamodb.DynamoDBClient({});
 const dynamoDocClient = DynamoDBDocumentClient.from(dynamoDbClient);
 const pollyClient = new polly.PollyClient({});
 
+class DocumentProcessingError extends Error {}
+
+function isZipSignature(buffer: Buffer): boolean {
+  return (
+    buffer.length >= 4 &&
+    buffer[0] === 0x50 &&
+    buffer[1] === 0x4b &&
+    (buffer[2] === 0x03 || buffer[2] === 0x05 || buffer[2] === 0x07)
+  );
+}
+
 async function streamToBuffer(stream: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: any[] = [];
@@ -107,6 +118,11 @@ export const handler = async (event: S3Event): Promise<void> => {
         break;
 
       case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        if (!isZipSignature(documentBuffer)) {
+          throw new DocumentProcessingError(
+            "This file doesn't look like a valid .docx document. Try re-saving it as .docx from Word, LibreOffice, or Google Docs.",
+          );
+        }
         const docxResult = await mammoth.extractRawText({
           buffer: documentBuffer,
         });
@@ -118,7 +134,9 @@ export const handler = async (event: S3Event): Promise<void> => {
         break;
 
       default:
-        throw new Error(`Unsupported content type: ${s3Response.ContentType}`);
+        throw new DocumentProcessingError(
+          `Unsupported content type: ${s3Response.ContentType}`,
+        );
     }
 
     const cleanedText = await cleanText(extractedText);
@@ -169,6 +187,12 @@ export const handler = async (event: S3Event): Promise<void> => {
     await dynamoDocClient.send(dynamodbCommand);
   } catch (error) {
     console.error("Error processing document: ", error);
+
+    const errorMessage =
+      error instanceof DocumentProcessingError
+        ? error.message
+        : "Something went wrong while converting this document.";
+
     // Mark item as FAILED in dynamodb
     const dynamodbCommand = new UpdateCommand({
       TableName: TABLE_NAME,
@@ -176,13 +200,16 @@ export const handler = async (event: S3Event): Promise<void> => {
         PK: `USER#${userSub}`,
         SK: `CONVERSION#${conversionId}`,
       },
-      UpdateExpression: "SET #status = :status, #updatedAt = :updatedAt",
+      UpdateExpression:
+        "SET #status = :status, #errorMessage = :errorMessage, #updatedAt = :updatedAt",
       ExpressionAttributeNames: {
         "#status": "status",
+        "#errorMessage": "errorMessage",
         "#updatedAt": "updatedAt",
       },
       ExpressionAttributeValues: {
         ":status": ConversionStatus.FAILED,
+        ":errorMessage": errorMessage,
         ":updatedAt": new Date().toISOString(),
       },
     });

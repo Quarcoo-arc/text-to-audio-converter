@@ -91,13 +91,22 @@ export function ConversionListItem({ record }: { record: ConversionRecord }) {
             <p className="text-xs text-error">Couldn't get the file</p>
           )}
         </div>
+      ) : isFailed ? (
+        <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+          <div className="flex items-center gap-2 text-sm text-error">
+            {STATUS_COPY[record.status]}
+          </div>
+          {record.errorMessage && (
+            <p
+              className="max-w-[18rem] truncate text-xs text-ink-soft"
+              title={record.errorMessage}
+            >
+              {record.errorMessage}
+            </p>
+          )}
+        </div>
       ) : (
-        <div
-          className={
-            "flex shrink-0 items-center gap-2 text-sm " +
-            (isFailed ? "text-error" : "text-ink-soft")
-          }
-        >
+        <div className="flex shrink-0 items-center gap-2 text-sm text-ink-soft">
           {isProcessing && <Waveform active className="h-3" />}
           {STATUS_COPY[record.status]}
         </div>

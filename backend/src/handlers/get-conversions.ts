@@ -28,7 +28,7 @@ export const handler = async (
       },
       ScanIndexForward: false, // newest first / descending order
       ProjectionExpression:
-        "conversionId, fileName, #status, createdAt, completedAt",
+        "conversionId, fileName, #status, createdAt, completedAt, errorMessage",
       ExpressionAttributeNames: {
         "#status": "status",
       },

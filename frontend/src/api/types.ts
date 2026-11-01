@@ -6,6 +6,7 @@ export interface ConversionRecord {
   status: ConversionStatus;
   createdAt: string; // ISO 8601
   completedAt?: string; // ISO 8601
+  errorMessage?: string;
 }
 
 export interface RequestUploadResponse {

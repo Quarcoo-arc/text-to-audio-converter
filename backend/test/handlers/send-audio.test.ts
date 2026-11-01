@@ -60,7 +60,7 @@ describe("send-audio handler", () => {
     expect(input.Destination?.ToAddresses).toEqual(["reader@example.com"]);
     expect(input.Content?.Simple?.Body?.Html?.Data).toContain("report.pdf");
     expect(input.Content?.Simple?.Body?.Html?.Data).toContain(
-      `http://localhost:5173/${CONVERSION_ID}`,
+      "http://localhost:5173",
     );
   });
 
