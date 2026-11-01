@@ -71,4 +71,48 @@ describe("API Stack Infrastructure Tests", () => {
       },
     });
   });
+
+  test("GET /conversions/{conversionId}/download exists, nested under /conversions, and requires Cognito auth", () => {
+    const resources = template.findResources("AWS::ApiGateway::Resource", {
+      Properties: { PathPart: "{conversionId}" },
+    });
+    const conversionIdResourceIds = Object.keys(resources);
+    expect(conversionIdResourceIds).toHaveLength(1);
+
+    const downloadResources = template.findResources(
+      "AWS::ApiGateway::Resource",
+      {
+        Properties: {
+          PathPart: "download",
+          ParentId: { Ref: conversionIdResourceIds[0] },
+        },
+      },
+    );
+    const downloadResourceIds = Object.keys(downloadResources);
+    expect(downloadResourceIds).toHaveLength(1);
+
+    template.hasResourceProperties("AWS::ApiGateway::Method", {
+      HttpMethod: "GET",
+      ResourceId: { Ref: downloadResourceIds[0] },
+      AuthorizationType: "COGNITO_USER_POOLS",
+      AuthorizerId: Match.anyValue(),
+    });
+  });
+
+  test("download handler can read the audio object from the bucket and the conversion record from the table", () => {
+    template.hasResourceProperties("AWS::IAM::Policy", {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Effect: "Allow",
+            Action: Match.arrayWith(["s3:GetObject*"]),
+          }),
+          Match.objectLike({
+            Effect: "Allow",
+            Action: Match.arrayWith(["dynamodb:GetItem"]),
+          }),
+        ]),
+      }),
+    });
+  });
 });
