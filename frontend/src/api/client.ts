@@ -1,5 +1,9 @@
 import { apiBaseUrl } from "../config";
-import type { ConversionRecord, RequestUploadResponse } from "./types";
+import type {
+  ConversionRecord,
+  DownloadUrlResponse,
+  RequestUploadResponse,
+} from "./types";
 
 const base = apiBaseUrl ?? "";
 
@@ -49,6 +53,22 @@ export function requestUploadUrl(
 
 export function listConversions(token: string): Promise<ConversionRecord[]> {
   return request<ConversionRecord[]>("/conversions", token);
+}
+
+/**
+ * Gets a short-lived, authorized download URL for a completed conversion's
+ * audio file. The backend scopes this to the caller's own records (via the
+ * Cognito-authenticated request), so a signed-in user can only ever get a
+ * URL for their own conversions.
+ */
+export function getDownloadUrl(
+  conversionId: string,
+  token: string,
+): Promise<DownloadUrlResponse> {
+  return request<DownloadUrlResponse>(
+    `/conversions/${conversionId}/download`,
+    token,
+  );
 }
 
 /**

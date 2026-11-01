@@ -12,3 +12,7 @@ export interface RequestUploadResponse {
   conversionId: string;
   uploadUrl: string;
 }
+
+export interface DownloadUrlResponse {
+  downloadUrl: string;
+}
