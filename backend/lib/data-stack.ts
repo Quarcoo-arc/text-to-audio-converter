@@ -33,7 +33,7 @@ export class DataStack extends Stack {
       autoDeleteObjects: true, // Delete files when stack is destroyed
       cors: [
         {
-          allowedMethods: [s3.HttpMethods.PUT],
+          allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET],
           allowedOrigins: ["*"],
           allowedHeaders: ["*"],
         },
